@@ -14,18 +14,31 @@
 #include <unistd.h>
 #include <errno.h>
 
+/* We use a statically allocated buffer to avoid needing to malloc a new
+ * buffer of the appropriate size.
+ */
 #define ARG_BUF_SIZE 256
+
+/* We define some constants that control the leaky bucket algorithm.
+ * See wait_bucket() for details on the algorithm
+ *
+ * BUCKET_SIZE controls the size of the bucket (in seconds).
+ * BUCKET_COST contains the cost of each call to wait_bucket (or in our case,
+ * each process respawn) in seconds.
+ */
 #define BUCKET_SIZE 20
-#define BUCKET_COST_DIVISOR 2
+#define BUCKET_COST 10
 
 bool spawn(char* arg_buf[ARG_BUF_SIZE]) {
-    /* Spawn a child with arguments in arg_buf.
+    /* Spawn a child with arguments in arg_buf, then wait for the child to
+     * return.
      *
      * arg_buf[0] is assumed to be the program name.
      * Returns true if the child exited with a return code of 0, false
      * otherwise.
      */
 
+    /* Fork off the child process */
     pid_t child_pid = fork();
     if (child_pid == -1) {
         perror("renew: error when forking");
@@ -37,27 +50,24 @@ bool spawn(char* arg_buf[ARG_BUF_SIZE]) {
     }
     fprintf(stderr, "renew: launched child %s\n", arg_buf[0]);
 
-    bool waiting = true;
-    bool success = false;
-    while (waiting) {
-        int status;
+    /* Wait until the *correct* child returns */
+    int status;
+    while (true) {
         pid_t result = wait(&status);
         if (result == -1 && errno == ECHILD) {
-            waiting = false;
+            return false;
         } else if (result == child_pid) {
-            waiting = false;
-            success = WEXITSTATUS(status) == EXIT_SUCCESS;
-            if (!success) {
+            if (WEXITSTATUS(status) != EXIT_SUCCESS) {
                 fprintf(stderr, "renew: child returned with status %d\n",
                         WEXITSTATUS(status));
+                return false;
             }
+            return true;
         }
     }
-
-    return success;
 }
 
-void wait_bucket(time_t bucket_size, time_t* bucket, time_t* old_time) {
+void wait_bucket(time_t* bucket, time_t* old_time) {
     /* wait_bucket implements a "leaky bucket" rate limiting algorithm.
      *
      * The algorithm works by maintaining a "bucket" which fills with
@@ -65,25 +75,19 @@ void wait_bucket(time_t bucket_size, time_t* bucket, time_t* old_time) {
      * there is enough time available to remove.
      */
 
+    time_t cost = BUCKET_COST;
     time_t elapsed = time(NULL) - *old_time;
     *bucket += elapsed;
-
-    /* Calculate the cost to call this function */
-    time_t cost = bucket_size / BUCKET_COST_DIVISOR;
 
     if (*bucket < cost) {
         /* Wait until the cost is paid, emptying the bucket */
         cost -= *bucket;
         *bucket = 0;
-        while (cost > 0) {
-            cost = sleep(cost);
-        }
+        while (cost > 0) cost = sleep(cost);
     } else {
         /* Lower the bucket, ensure that it is capped, and save the time */
         *bucket -= cost;
-        if (*bucket > bucket_size) {
-            *bucket = bucket_size;
-        }
+        if (*bucket > BUCKET_SIZE) *bucket = BUCKET_SIZE;
     }
 
     *old_time = time(NULL);
@@ -98,10 +102,9 @@ int main(int count, char** args) {
         return E2BIG;
     }
 
+    /* Make a copy of the arguments in the right format for execv */
     char* arg_buf[ARG_BUF_SIZE] = {0};
-    for (unsigned int i = 0; i < count; i++) {
-        arg_buf[i] = args[i + 1];
-    }
+    for (unsigned int i = 0; i < count; i++) arg_buf[i] = args[i + 1];
 
     /* old_time and bucket can both be initialised to 0 since the elapsed time
      * since the epoch will be enough to initially fill the bucket...
@@ -109,7 +112,7 @@ int main(int count, char** args) {
     time_t old_time = 0;
     time_t bucket = 0;
     while (true) {
-        wait_bucket(BUCKET_SIZE, &bucket, &old_time);
+        wait_bucket(&bucket, &old_time);
         spawn(arg_buf);
     }
 }
