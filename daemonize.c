@@ -9,10 +9,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <errno.h>
 
 #include "lib.h"
+
+#define NAME "daemonize"
 
 bool daemonize() {
     /* Daemonize the current process.
@@ -40,14 +43,14 @@ bool daemonize() {
 
 int main(int count, char** args) {
     if (count < 2) {
-        fprintf(stderr, "Not enough arguments\n");
+        fprintf(stderr, "usage: %s <child> [<child arguments> ...]\n", NAME);
         return EINVAL;
     }
 
     if (!daemonize()) {
-        perror("daemonize: failed to daemonize");
+        fprintf(stderr, "%s: daemonizing failed: %s\n", NAME, strerror(errno));
         return EXIT_FAILURE;
     }
 
-    exec_fatal("daemonize", count - 1, &args[1]);
+    exec_fatal(NAME, count - 1, &args[1]);
 }

@@ -9,12 +9,15 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
 
 #include "lib.h"
+
+#define NAME "renew"
 
 /* We define some constants that control the leaky bucket algorithm.
  * See wait_bucket() for details on the algorithm
@@ -38,12 +41,12 @@ bool spawn(int count, char** args) {
     /* Fork off the child process */
     pid_t child_pid = fork();
     if (child_pid == -1) {
-        perror("renew: error when forking");
+        fprintf(stderr, "%s: fork failed: %s\n", NAME, strerror(errno));
         return false;
     } else if (child_pid == 0) {
-        exec_fatal("renew", count, args);
+        exec_fatal(NAME, count, args);
     }
-    fprintf(stderr, "renew: launched child %s\n", args[0]);
+    fprintf(stderr, "%s: launched child %s\n", NAME, args[0]);
 
     /* Wait until the *correct* child returns */
     int status;
@@ -53,7 +56,7 @@ bool spawn(int count, char** args) {
             return false;
         } else if (result == child_pid) {
             if (WEXITSTATUS(status) != EXIT_SUCCESS) {
-                fprintf(stderr, "renew: child returned with status %d\n",
+                fprintf(stderr, "%s: child returned with status %d\n", NAME,
                         WEXITSTATUS(status));
                 return false;
             }
@@ -90,7 +93,7 @@ void wait_bucket(time_t* bucket, time_t* old_time) {
 
 int main(int count, char** args) {
     if (count < 2) {
-        fprintf(stderr, "Not enough arguments\n");
+        fprintf(stderr, "usage: %s <child> [<child arguments> ...]\n", NAME);
         return EINVAL;
     }
 
