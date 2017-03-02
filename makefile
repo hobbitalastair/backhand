@@ -2,7 +2,7 @@
 PREFIX := ${DESTDIR}/usr
 BINDIR := ${PREFIX}/bin
 CFLAGS := -Os -Wall -Werror
-OBJS = renew daemonize
+OBJS = renew daemonize semaphore
 
 all: ${OBJS}
 
