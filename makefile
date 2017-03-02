@@ -2,17 +2,21 @@
 PREFIX := ${DESTDIR}/usr
 BINDIR := ${PREFIX}/bin
 CFLAGS := -Os -Wall -Werror
-OBJS = renew daemonize semaphore
+PROGS = renew daemonize semaphore
+OBJS = $(PROGS) lib.o
 
 all: ${OBJS}
 
-%: %.c
-	${CC} $< -o $@ ${CFLAGS} ${LDFLAGS}
+%: %.c lib.o
+	${CC} $^ -o $@ ${CFLAGS} ${LDFLAGS}
+
+%.o: %.c
+	${CC} -c $^ -o $@ ${CFLAGS} ${LDFLAGS}
 
 clean:
 	rm -f ${OBJS}
 
-install: ${OBJS}
+install: ${PROGS}
 	mkdir -p "${BINDIR}/"
-	for obj in ${OBJS}; do install -m755 "$$obj" ${BINDIR}/; done
+	for obj in ${PROGS}; do install -m755 "$$obj" ${BINDIR}/; done
 

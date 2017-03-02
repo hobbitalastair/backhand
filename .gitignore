@@ -1,3 +1,4 @@
 daemonize
 renew
 semaphore
+*.o

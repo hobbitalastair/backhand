@@ -12,10 +12,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-/* We use a statically allocated buffer to avoid needing to malloc a new
- * buffer of the appropriate size.
- */
-#define ARG_BUF_SIZE 256
+#include "lib.h"
 
 bool daemonize() {
     /* Daemonize the current process.
@@ -45,9 +42,6 @@ int main(int count, char** args) {
     if (count < 2) {
         fprintf(stderr, "Not enough arguments\n");
         return EINVAL;
-    } else if (count > ARG_BUF_SIZE) {
-        fprintf(stderr, "Too many arguments\n");
-        return E2BIG;
     }
 
     if (!daemonize()) {
@@ -55,10 +49,5 @@ int main(int count, char** args) {
         return EXIT_FAILURE;
     }
 
-    /* Exec the child process */
-    char* arg_buf[ARG_BUF_SIZE] = {0};
-    for (unsigned int i = 0; i < count; i++) arg_buf[i] = args[i + 1];
-    execv(arg_buf[0], arg_buf); /* Shouldn't return */
-    perror("daemonize: failed to execute child");
-    return EXIT_FAILURE;
+    exec_fatal("daemonize", count - 1, &args[1]);
 }

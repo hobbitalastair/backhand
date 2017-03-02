@@ -14,10 +14,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-/* We use a statically allocated buffer to avoid needing to malloc a new
- * buffer of the appropriate size.
- */
-#define ARG_BUF_SIZE 256
+#include "lib.h"
 
 /* We define some constants that control the leaky bucket algorithm.
  * See wait_bucket() for details on the algorithm
@@ -29,11 +26,11 @@
 #define BUCKET_SIZE 20
 #define BUCKET_COST 10
 
-bool spawn(char* arg_buf[ARG_BUF_SIZE]) {
-    /* Spawn a child with arguments in arg_buf, then wait for the child to
-     * return.
+bool spawn(int count, char** args) {
+    /* Spawn a child with arguments in args, then wait for the child to return.
      *
-     * arg_buf[0] is assumed to be the program name.
+     * args[0] is assumed to be the program name, and count is assumed to be
+     * the number of arguments in the buffer.
      * Returns true if the child exited with a return code of 0, false
      * otherwise.
      */
@@ -44,11 +41,9 @@ bool spawn(char* arg_buf[ARG_BUF_SIZE]) {
         perror("renew: error when forking");
         return false;
     } else if (child_pid == 0) {
-        execv(arg_buf[0], arg_buf);
-        perror("renew: failed to execv child");
-        exit(EXIT_FAILURE);
+        exec_fatal("renew", count, args);
     }
-    fprintf(stderr, "renew: launched child %s\n", arg_buf[0]);
+    fprintf(stderr, "renew: launched child %s\n", args[0]);
 
     /* Wait until the *correct* child returns */
     int status;
@@ -97,14 +92,7 @@ int main(int count, char** args) {
     if (count < 2) {
         fprintf(stderr, "Not enough arguments\n");
         return EINVAL;
-    } else if (count > ARG_BUF_SIZE) {
-        fprintf(stderr, "Too many arguments\n");
-        return E2BIG;
     }
-
-    /* Make a copy of the arguments in the right format for execv */
-    char* arg_buf[ARG_BUF_SIZE] = {0};
-    for (unsigned int i = 0; i < count; i++) arg_buf[i] = args[i + 1];
 
     /* old_time and bucket can both be initialised to 0 since the elapsed time
      * since the epoch will be enough to initially fill the bucket...
@@ -113,6 +101,6 @@ int main(int count, char** args) {
     time_t bucket = 0;
     while (true) {
         wait_bucket(&bucket, &old_time);
-        spawn(arg_buf);
+        spawn(count - 1, &args[1]);
     }
 }
