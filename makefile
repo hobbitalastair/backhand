@@ -13,5 +13,6 @@ clean:
 	rm -f ${OBJS}
 
 install: ${OBJS}
+	mkdir -p "${BINDIR}/"
 	for obj in ${OBJS}; do install -m755 "$$obj" ${BINDIR}/; done
 
