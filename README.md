@@ -5,6 +5,7 @@ A set of utilities for managing background processes.
 - `daemonize`: start the given process as a daemon using the double-fork method
 - `renew`: restart a process whenever it returns (rate limited)
 - `semaphore`: increment or decrement a stored counter
+- `pipekill`: send a SIGTERM to a child process when a pipe is written to
 
 ## Use cases
 

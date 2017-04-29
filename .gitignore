@@ -1,4 +1,5 @@
 daemonize
 renew
 semaphore
+pipekill
 *.o
