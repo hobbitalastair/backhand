@@ -1,6 +1,8 @@
 /* renew.c
  *
  * Keep alive a child process, by restarting it whenever it returns.
+ * If renew is sent a SIGTERM or SIGINT, terminate the child process before
+ * exiting.
  *
  * Author:  Alastair Hughes
  * Contact: hobbitalastair at yandex dot com
@@ -29,6 +31,17 @@
 #define BUCKET_SIZE 20
 #define BUCKET_COST 10
 
+/* We also define how patient we are with processes which don't terminate soon
+ * enough. If the process takes longer than PATIENCE seconds we send it a
+ * SIGKILL.
+ */
+#define PATIENCE 30
+
+/* We store the current child PID value in an sig_atomic_t value to let it be
+ * used by the signal handler for SIGTERM (and SIGINT)
+ */
+volatile sig_atomic_t child_pid;
+
 bool spawn(int count, char** args) {
     /* Spawn a child with arguments in args, then wait for the child to return.
      *
@@ -39,7 +52,7 @@ bool spawn(int count, char** args) {
      */
 
     /* Fork off the child process */
-    pid_t child_pid = fork();
+    child_pid = fork();
     if (child_pid == -1) {
         fprintf(stderr, "%s: fork failed: %s\n", NAME, strerror(errno));
         return false;
@@ -91,11 +104,52 @@ void wait_bucket(time_t* bucket, time_t* old_time) {
     *old_time = time(NULL);
 }
 
+void kill_child(int signum) {
+    /* Kill the child.
+     *
+     * This should be triggered by a SIGALRM, if we are waiting to exit but
+     * have run out of patience waiting for the child.
+     */
+
+    kill(child_pid, SIGKILL);
+}
+
+void terminate_child(int signum) {
+    /* Handle a sigterm by killing the child process, then calling exit().
+     *
+     * To avoid hanging waiting for the child process we send a SIGKILL to the
+     * child if we wait to long.
+     */
+
+    signal(SIGALRM, kill_child);
+    alarm(PATIENCE);
+
+    kill(child_pid, signum);
+    bool waiting = true;
+    while (waiting) {
+        int status;
+        pid_t result = waitpid(child_pid, &status, 0);
+        waiting = result != -1;
+    }
+
+    exit(0);
+}
+
 int main(int count, char** args) {
     if (count < 2) {
         fprintf(stderr, "usage: %s <child> [<child arguments> ...]\n", NAME);
         return EINVAL;
     }
+
+    struct sigaction sigterm_handler;
+    sigterm_handler.sa_handler = terminate_child;
+    sigset_t ignored;
+    sigemptyset(&ignored);
+    sigaddset(&ignored, SIGTERM);
+    sigaddset(&ignored, SIGINT);
+    sigterm_handler.sa_mask = ignored;
+    sigaction(SIGTERM, &sigterm_handler, NULL);
+    sigaction(SIGINT, &sigterm_handler, NULL);
 
     /* old_time and bucket can both be initialised to 0 since the elapsed time
      * since the epoch will be enough to initially fill the bucket...
