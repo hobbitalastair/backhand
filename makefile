@@ -10,8 +10,8 @@ all: ${OBJS}
 %: %.c lib.o
 	${CC} $^ -o $@ ${CFLAGS} ${LDFLAGS}
 
-%.o: %.c
-	${CC} -c $^ -o $@ ${CFLAGS} ${LDFLAGS}
+%.o: %.c config.h
+	${CC} -c $< -o $@ ${CFLAGS} ${LDFLAGS}
 
 clean:
 	rm -f ${OBJS}

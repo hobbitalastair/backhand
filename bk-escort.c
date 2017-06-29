@@ -23,9 +23,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#define SOCK_PATHLEN 92 /* Maximum path length for the socket */
-#define SLEEP_INTERVAL 1 /* Number of seconds to sleep between retries */
-#define CHILD_TIMEOUT 10 /* Time before killing a child that exits slowly */
+#include "config.h"
 
 /* We store a flag for detecting which signal handlers have been called */
 volatile sig_atomic_t sigchld;

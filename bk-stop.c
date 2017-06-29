@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define SOCK_PATHLEN 92 /* Maximum path length for the socket */
+#include "config.h"
 
 int main(int count, char** args) {
     char* name = "";
