@@ -2,7 +2,7 @@
 PREFIX := ${DESTDIR}/usr
 BINDIR := ${PREFIX}/bin
 CFLAGS := -Os -Wall -Werror
-PROGS = bk-escort renew daemonize semaphore
+PROGS = bk-escort bk-stop renew daemonize semaphore
 OBJS = $(PROGS) lib.o
 
 all: ${OBJS}
