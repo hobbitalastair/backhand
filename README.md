@@ -40,3 +40,13 @@ requiring an explicit dependency tree.
 * `bh-require` - require a service to be started (returns once the service starts)
 * `bh-release` - release a prior require (returns once the service exits)
 
+## Service scripts
+
+Service scripts are stored in a per-service directory.
+These are expected to be executable files that do not fork and return once
+completed.
+
+* `pre` - run before a service starts
+* `run` - the actual service to run (forking services not supported)
+* `post` - run after the service stops
+
