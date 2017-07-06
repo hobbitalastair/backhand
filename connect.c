@@ -1,7 +1,7 @@
-/* bk-stop.c
+/* connect.c
  *
- * Stop a process managed by bk-escort by connecting to the given socket and
- * waiting for the socket to be closed by the other end.
+ * Connect to a socket and wait for something to be written to the socket or
+ * or the socket closed.
  *
  * Author:  Alastair Hughes
  * Contact: hobbitalastair at yandex dot com

@@ -1,5 +1,7 @@
 bk-escort
+bk-start
 bk-stop
+connect
 daemonize
 renew
 semaphore
