@@ -1,6 +1,6 @@
 #!/usr/bin/sh
 #
-# bk-stop: stop a service.
+# bh-stop: stop a service.
 #
 # Author:   Alastair Hughes
 # Contact:  hobbitalastair at yandex dot com
@@ -13,7 +13,7 @@ SERVICE_POST="post"
 SERVICE_TIMEOUT=10
 
 if [ $# != 1 ]; then
-    printf "usage: bk-stop <service>\n" 1>&2
+    printf "usage: bh-stop <service>\n" 1>&2
     exit 1;
 fi
 service="$1"

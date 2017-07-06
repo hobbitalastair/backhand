@@ -1,6 +1,6 @@
 #!/usr/bin/sh
 #
-# bk-start: start a service.
+# bh-start: start a service.
 #
 # Author:   Alastair Hughes
 # Contact:  hobbitalastair at yandex dot com
@@ -14,7 +14,7 @@ SERVICE_RUN="run"
 SERVICE_TIMEOUT=10
 
 if [ $# != 1 ]; then
-    printf "usage: bk-start <service>\n" 1>&2
+    printf "usage: bh-start <service>\n" 1>&2
     exit 1;
 fi
 service="$1"
@@ -44,7 +44,7 @@ fi
 
 if [ -e "${service_dir}/${SERVICE_START}" ]; then
     socket="${service_rundir}/socket"
-    bk-escort "${socket}" "${service_dir}/${SERVICE_START}"
+    bh-escort "${socket}" "${service_dir}/${SERVICE_START}"
     if [ "$?" != 0 ]; then
         printf "%s: run failed\n" "$0" 1>&2
         exit 1;

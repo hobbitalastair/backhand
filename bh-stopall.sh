@@ -1,6 +1,6 @@
 #!/usr/bin/sh
 #
-# bk-stopall: stop all running services.
+# bh-stopall: stop all running services.
 #
 # Author:   Alastair Hughes
 # Contact:  hobbitalastair at yandex dot com
@@ -14,7 +14,7 @@ SERVICE_RUNDIR="/run/backhand/"
 cd "${SERVICE_RUNDIR}"
 for service in *; do
     if [ -d "${service}" ]; then
-        bk-stop "${service}"
+        bh-stop "${service}"
     fi
 done
 

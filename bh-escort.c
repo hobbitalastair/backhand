@@ -1,4 +1,4 @@
-/* bk-escort.c
+/* bh-escort.c
  *
  * Escort process for looking after long-lived daemons.
  * This provides a unix domain socket for shutting down the process, and will
