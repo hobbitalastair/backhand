@@ -1,6 +1,7 @@
 bk-escort
 bk-start
 bk-stop
+bk-stopall
 connect
 daemonize
 renew
