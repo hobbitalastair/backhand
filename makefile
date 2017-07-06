@@ -1,7 +1,8 @@
 PREFIX := ${DESTDIR}/usr
 BINDIR := ${PREFIX}/bin
 CFLAGS := -Os -Wall -Werror
-PROGS = bh-escort bh-start bh-stop bh-stopall connect renew daemonize semaphore
+PROGS = bh-escort bh-release bh-require bh-start bh-stop bh-stopall \
+	connect renew daemonize semaphore
 OBJS = $(PROGS) lib.o
 
 all: ${OBJS}
