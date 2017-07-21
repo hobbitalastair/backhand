@@ -9,4 +9,5 @@ connect
 daemonize
 renew
 semaphore
+state
 *.o
