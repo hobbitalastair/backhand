@@ -93,6 +93,10 @@ void fatal_set(int fd, char state[BUF_SIZE]) {
 
     /* Note that we only want result == len; if this is not the case then we
      * can't be sure of success...
+     *
+     * FIXME: Due to our locking method we just use the really simple
+     *        truncate and replace method here - but if we fail for any reason
+     *        we bail, leaving a broken file.
      */
     if (lseek(fd, 0, SEEK_SET) == -1) {
         fprintf(stderr, "%s: seek failed: %s\n", NAME, strerror(errno));
