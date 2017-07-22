@@ -7,7 +7,6 @@ bh-stop
 bh-stopall
 connect
 daemonize
-renew
 semaphore
 state
 *.o
