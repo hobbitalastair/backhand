@@ -11,6 +11,14 @@
  */
 #define SLEEP_INTERVAL 1
 
+/* CHILD_RATELIMIT is the minimum number of seconds between each attempt at
+ * launching a child.
+ *
+ * This provides a simple mechanism to avoid trying to restart a broken
+ * process constantly.
+ */
+#define CHILD_RATELIMIT 10
+
 /* CHILD_TIMEOUT is the number of seconds to wait for a child to respond to a
  * SIGTERM before sending it a SIGKILL.
  */

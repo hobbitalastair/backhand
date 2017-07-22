@@ -169,6 +169,7 @@ int main(int count, char** args) {
 
     sigset_t mask = init_signals(name);
     int sock = init_socket(name, args[1]);
+    time_t launch_time = time(NULL);
     pid_t pid = launch(name, sock, count, args);
     if (pid == -1) return EXIT_FAILURE;
 
@@ -218,10 +219,14 @@ int main(int count, char** args) {
                 }
 
                 if (keep_alive) {
+                    double elapsed = difftime(time(NULL), launch_time);
+                    if (elapsed < CHILD_RATELIMIT && elapsed >= 0) {
+                        sleep(CHILD_RATELIMIT - elapsed);
+                    }
+                    launch_time = time(NULL);
+
                     pid_t newpid = launch(name, sock, count, args);
-                    if (newpid == -1) {
-                        sleep(SLEEP_INTERVAL);
-                    } else {
+                    if (newpid != -1) {
                         pid = newpid;
                     }
                 } else {
