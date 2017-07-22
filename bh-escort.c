@@ -272,11 +272,16 @@ int main(int count, char** args) {
 
             keep_alive = false;
             kill(pid, SIGTERM);
-            alarm(CHILD_TIMEOUT);
 
             unlink(args[1]);
             close(sock);
             sock = -1;
+
+            /* Mixing sleep() and alarm() is apparently a "bad idea", so we
+             * need to ensure that sleep() is never called once we have set
+             * this.
+             */
+            alarm(CHILD_TIMEOUT);
         }
     }
 }
