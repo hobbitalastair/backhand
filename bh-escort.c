@@ -121,6 +121,34 @@ int init_socket(char* name, char* path) {
     return sock;
 }
 
+void daemonize(char* name) {
+    /* Daemonize the current process.
+     *
+     * This boils down to forking twice and calling "setsid" in the middle;
+     * there is a default implementation (daemon) available in the libc, but
+     * it's not standardised so just roll our own.
+     *
+     * This calls exit() on failure.
+     */
+
+    pid_t result = fork();
+    if (result == -1) {
+        fprintf(stderr, "%s: fork(): %s\n", name, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    if (result > 0) exit(EXIT_SUCCESS);
+
+    setsid(); /* setsid() after a fork() should never fail */
+
+    result = fork();
+    while (result == -1) {
+        fprintf(stderr, "%s: fork(): %s\n", name, strerror(errno));
+        sleep(SLEEP_INTERVAL);
+        result = fork();
+    }
+    if (result > 0) exit(EXIT_SUCCESS);
+}
+
 pid_t launch(char* name, int sock, int count, char** args) {
     /* Launch the child process described with args 2 and onwards.
      *
@@ -131,9 +159,9 @@ pid_t launch(char* name, int sock, int count, char** args) {
 
     pid_t pid = fork();
     while (pid == -1) {
-        pid = fork();
         fprintf(stderr, "%s: fork(): %s\n", name, strerror(errno));
         sleep(SLEEP_INTERVAL);
+        pid = fork();
     }
 
     if (pid == 0) {
@@ -172,6 +200,7 @@ int main(int count, char** args) {
 
     sigset_t mask = init_signals(name);
     int sock = init_socket(name, args[1]);
+    daemonize(name);
 
     time_t launch_time = time(NULL);
     pid_t pid = launch(name, sock, count, args);
