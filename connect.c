@@ -18,7 +18,7 @@
 #include "config.h"
 
 int main(int count, char** args) {
-    char* name = "";
+    char* name = __FILE__;
     if (count > 0) name = args[0];
     if (count != 2) {
         fprintf(stderr, "usage: %s <socket>\n", name);

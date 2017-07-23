@@ -191,7 +191,7 @@ pid_t launch(char* name, int sock, int count, char** args) {
 }
 
 int main(int count, char** args) {
-    char* name = "";
+    char* name = __FILE__;
     if (count > 0) name = args[0];
     if (count < 3) {
         fprintf(stderr, "usage: %s <socket> [<child> ...]\n", name);
