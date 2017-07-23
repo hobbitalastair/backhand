@@ -35,10 +35,8 @@ bool daemonize() {
     if (setsid() == -1) return false;
 
     result = fork();
-    if (result > 0) {
-        exit(EXIT_SUCCESS);
-    }
-    return result != -1;
+    if (result > 0) exit(EXIT_SUCCESS);
+    return result == -1;
 }
 
 int main(int count, char** args) {
