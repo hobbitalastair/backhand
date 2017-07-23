@@ -124,16 +124,19 @@ int init_socket(char* name, char* path) {
 pid_t launch(char* name, int sock, int count, char** args) {
     /* Launch the child process described with args 2 and onwards.
      *
-     * Returns a -1 on failure, and the pid of the child otherwise.
+     * Returns the pid of the child.
      */
 
     fprintf(stderr, "%s: launching child %s\n", name, args[2]);
 
     pid_t pid = fork();
-    if (pid < 0) {
+    while (pid == -1) {
+        pid = fork();
         fprintf(stderr, "%s: fork(): %s\n", name, strerror(errno));
-        return -1;
-    } else if (pid == 0) {
+        sleep(SLEEP_INTERVAL);
+    }
+
+    if (pid == 0) {
         /* Clean up */
         close(sock);
         sigset_t child_mask;
@@ -169,9 +172,9 @@ int main(int count, char** args) {
 
     sigset_t mask = init_signals(name);
     int sock = init_socket(name, args[1]);
+
     time_t launch_time = time(NULL);
     pid_t pid = launch(name, sock, count, args);
-    if (pid == -1) return EXIT_FAILURE;
 
     /* Main event loop.
      *
@@ -225,10 +228,7 @@ int main(int count, char** args) {
                     }
                     launch_time = time(NULL);
 
-                    pid_t newpid = launch(name, sock, count, args);
-                    if (newpid != -1) {
-                        pid = newpid;
-                    }
+                    pid = launch(name, sock, count, args);
                 } else {
                     if (conn != -1) {
                         /* We write a single byte to the buffer to confirm that
