@@ -3,22 +3,21 @@ BINDIR := ${PREFIX}/bin
 CFLAGS := -Os -Wall -Werror
 PROGS = bh-escort bh-release bh-require bh-start bh-status bh-stop bh-stopall \
 	connect semaphore state
-OBJS = $(PROGS) lib.o
 
-all: ${OBJS}
+all: ${PROGS}
 
 %: %.sh
 	cp $^ $@
 	chmod +x $@
 
-%: %.c lib.o
+%: %.c
 	${CC} $^ -o $@ ${CFLAGS} ${LDFLAGS}
 
 %.o: %.c config.h
 	${CC} -c $< -o $@ ${CFLAGS} ${LDFLAGS}
 
 clean:
-	rm -f ${OBJS}
+	rm -f ${PROGS}
 
 install: ${PROGS}
 	mkdir -p "${BINDIR}/"
