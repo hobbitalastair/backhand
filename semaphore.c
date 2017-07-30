@@ -19,8 +19,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define NAME "semaphore"
-
 #define INC '+'
 #define DEC '-'
 #define EXIT_CHANGED 0
@@ -29,7 +27,7 @@
 
 #define BUF_SIZE 10 /* Enough for roughly 10^9 + operations */
 
-void fatal_lock(int fd) {
+void fatal_lock(char* name, int fd) {
     /* Lock the given fd.
      *
      * The whole file is locked, and the process will wait until the lock is
@@ -51,12 +49,12 @@ void fatal_lock(int fd) {
     } while (result == -1 && errno == EINTR);
 
     if (result != 0) {
-        fprintf(stderr, "%s: locking failed: %s\n", NAME, strerror(errno));
+        fprintf(stderr, "%s: locking failed: %s\n", name, strerror(errno));
         exit(EXIT_FAILED);
     }
 }
 
-int fatal_get(int fd) {
+int fatal_get(char* name, int fd) {
     /* Return the current value stored in the given fd.
      *
      * This calls exit() on failure.
@@ -67,10 +65,10 @@ int fatal_get(int fd) {
     ssize_t result = read(fd, &buf, BUF_SIZE);
     errno = 0;
     if (result == -1 || errno != 0) {
-        fprintf(stderr, "%s: read failed: %s\n", NAME, strerror(errno));
+        fprintf(stderr, "%s: read failed: %s\n", name, strerror(errno));
         exit(EXIT_FAILED);
     } else if (result >= BUF_SIZE) {
-        fprintf(stderr, "%s: too many characters\n", NAME);
+        fprintf(stderr, "%s: too many characters\n", name);
         exit(EXIT_FAILED);
     }
     
@@ -83,7 +81,7 @@ int fatal_get(int fd) {
         if (current > 9 || current < 0) {
             fprintf(stderr,
                     "%s: unexpected character ('%lc' in '%s')\n",
-                    NAME, buf[offset], buf);
+                    name, buf[offset], buf);
             exit(EXIT_FAILED);
         }
         total *= 10;
@@ -94,7 +92,7 @@ int fatal_get(int fd) {
     return total;
 }
 
-void fatal_set(int fd, int value) {
+void fatal_set(char* name, int fd, int value) {
     /* Write the given value back into the file.
      *
      * This calls exit() on failure.
@@ -104,7 +102,7 @@ void fatal_set(int fd, int value) {
 
     /* Write the value to the buffer */
     if (snprintf(buf, BUF_SIZE-1, "%u", value) >= BUF_SIZE) {
-        fprintf(stderr, "%s: too many increments\n", NAME);
+        fprintf(stderr, "%s: too many increments\n", name);
         exit(EXIT_FAILED);
     }
 
@@ -118,35 +116,37 @@ void fatal_set(int fd, int value) {
      *        we bail, leaving a broken file.
      */
     if (lseek(fd, 0, SEEK_SET) == -1) {
-        fprintf(stderr, "%s: seek failed: %s\n", NAME, strerror(errno));
+        fprintf(stderr, "%s: seek failed: %s\n", name, strerror(errno));
         exit(EXIT_FAILED);
     }
     if (ftruncate(fd, 0) == -1) {
-        fprintf(stderr, "%s: truncate failed: %s\n", NAME, strerror(errno));
+        fprintf(stderr, "%s: truncate failed: %s\n", name, strerror(errno));
         exit(EXIT_FAILED);
     }
     size_t len = strlen(buf);
     if (write(fd, buf, len) != len) {
-        fprintf(stderr, "%s: write failed: %s\n", NAME, strerror(errno));
+        fprintf(stderr, "%s: write failed: %s\n", name, strerror(errno));
         exit(EXIT_FAILED);
     }
 }
 
 int main(int count, char** args) {
+    char* name = __FILE__;
+    if (count > 0) name = args[0];
     if (count != 3) {
-        fprintf(stderr, "usage: %s <lock file> (+|-)\n", NAME);
+        fprintf(stderr, "usage: %s <lock file> (+|-)\n", name);
         return EINVAL;
     }
 
     char op = args[2][0];
     if ((op != INC && op != DEC) || args[2][1] != '\0') {
-        fprintf(stderr, "%s: expected '+' or '-', got '%s'\n", NAME, args[2]);
+        fprintf(stderr, "%s: expected '+' or '-', got '%s'\n", name, args[2]);
         return EINVAL;
     }
 
     int fd = open(args[1], O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if (fd == -1) {
-        fprintf(stderr, "%s: open failed: %s\n", NAME, strerror(errno));
+        fprintf(stderr, "%s: open failed: %s\n", name, strerror(errno));
         return EXIT_FAILED;
     }
 
@@ -154,10 +154,10 @@ int main(int count, char** args) {
      * multiple calls overwrite the other's results.
      * The lock is released when the process exits.
      */
-    fatal_lock(fd);
+    fatal_lock(name, fd);
 
     /* Update the value */
-    int value = fatal_get(fd);
+    int value = fatal_get(name, fd);
     int ret = EXIT_UNCHANGED;
     if (op == INC) {
         if (value == 0) ret = EXIT_CHANGED;
@@ -167,7 +167,7 @@ int main(int count, char** args) {
         if (value < 0) value = 0;
         if (value == 0) ret = EXIT_CHANGED;
     }
-    fatal_set(fd, value);
+    fatal_set(name, fd, value);
 
     return ret;
 }
