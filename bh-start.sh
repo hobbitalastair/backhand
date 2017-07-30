@@ -5,24 +5,22 @@
 # Author:   Alastair Hughes
 # Contact:  hobbitalastair at yandex dot com
 
-set -e
-
-SERVICE_DIR="/usr/lib/backhand"
-SERVICE_RUNDIR="/run/backhand"
+[ -z "${SERVICE_DIR}" ] && SERVICE_DIR="/usr/lib/backhand"
+[ -z "${SERVICE_RUNDIR}" ] && SERVICE_RUNDIR="/run/backhand"
 SERVICE_PRE="pre"
 SERVICE_RUN="run"
 SERVICE_TIMEOUT=10
 
 if [ $# != 1 ]; then
     printf "usage: bh-start <service>\n" 1>&2
-    exit 1;
+    exit 1
 fi
 service="$1"
 
 service_dir="${SERVICE_DIR}/${service}"
 if [ ! -d "${service_dir}" ]; then
     printf "%s: no such service\n" "$0" 1>&2
-    exit 1;
+    exit 1
 fi
 
 service_rundir="${SERVICE_RUNDIR}/${service}"
@@ -34,20 +32,31 @@ if [ ! -d "${service_rundir}" ]; then
     fi
 fi
 
-if [ -e "${service_dir}/${SERVICE_PRE}" ]; then
-    timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_PRE}"
-    if [ "$?" != 0 ]; then
-        printf "%s: pre failed\n" "$0" 1>&2
-        exit 1;
-    fi
-fi
+service_state="${service_rundir}/state"
+state "${service_state}" "started"
+ret="$?"
+if [ "${ret}" == 2 ]; then
+    printf "%s: updating the state failed\n" "$0" 1>&2
+    exit 1
+elif [ "${ret}" == 0 ]; then
 
-if [ -e "${service_dir}/${SERVICE_START}" ]; then
-    socket="${service_rundir}/socket"
-    bh-escort "${socket}" "${service_dir}/${SERVICE_START}"
-    if [ "$?" != 0 ]; then
-        printf "%s: run failed\n" "$0" 1>&2
-        exit 1;
+    if [ -x "${service_dir}/${SERVICE_PRE}" ]; then
+        timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_PRE}"
+        if [ "$?" != 0 ]; then
+            printf "%s: pre failed\n" "$0" 1>&2
+            state "${service_state}" "failed"
+            exit 1
+        fi
     fi
-fi
 
+    if [ -x "${service_dir}/${SERVICE_RUN}" ]; then
+        socket="${service_rundir}/socket"
+        bh-escort "${socket}" "${service_dir}/${SERVICE_RUN}"
+        if [ "$?" != 0 ]; then
+            printf "%s: run failed\n" "$0" 1>&2
+            state "${service_state}" "failed"
+            exit 1
+        fi
+    fi
+
+fi

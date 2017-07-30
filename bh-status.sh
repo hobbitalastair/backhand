@@ -7,11 +7,11 @@
 
 set -e
 
-SERVICE_DIR="/usr/lib/backhand"
-SERVICE_RUNDIR="/run/backhand"
+[ -z "${SERVICE_DIR}" ] && SERVICE_DIR="/usr/lib/backhand"
+[ -z "${SERVICE_RUNDIR}" ] && SERVICE_RUNDIR="/run/backhand"
 
 if [ $# != 1 ]; then
-    printf "usage: bh-stop <service>\n" 1>&2
+    printf "usage: bh-status <service>\n" 1>&2
     exit 1;
 fi
 service="$1"
@@ -28,8 +28,9 @@ if [ ! -d "${service_rundir}" ]; then
     exit 1
 fi
 
-if [ -e "${service_rundir}/socket" ]; then
-    printf 'started\n'
+if [ -e "${service_rundir}/state" ]; then
+    cat "${service_rundir}/state"
+    printf '\n'
 else
     printf 'stopped\n'
 fi

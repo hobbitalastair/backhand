@@ -5,23 +5,22 @@
 # Author:   Alastair Hughes
 # Contact:  hobbitalastair at yandex dot com
 
-set -e
-
-SERVICE_DIR="/usr/lib/backhand/"
-SERVICE_RUNDIR="/run/backhand/"
+[ -z "${SERVICE_DIR}" ] && SERVICE_DIR="/usr/lib/backhand"
+[ -z "${SERVICE_RUNDIR}" ] && SERVICE_RUNDIR="/run/backhand"
 SERVICE_POST="post"
+SERVICE_RUN="run"
 SERVICE_TIMEOUT=10
 
 if [ $# != 1 ]; then
     printf "usage: bh-stop <service>\n" 1>&2
-    exit 1;
+    exit 1
 fi
 service="$1"
 
 service_dir="${SERVICE_DIR}/${service}"
 if [ ! -d "${service_dir}" ]; then
     printf "%s: no such service\n" "$0" 1>&2
-    exit 1;
+    exit 1
 fi
 
 service_rundir="${SERVICE_RUNDIR}/${service}"
@@ -30,20 +29,31 @@ if [ ! -d "${service_rundir}" ]; then
     exit 1
 fi
 
-if [ -e "${service_dir}/${SERVICE_START}" ]; then
-    socket="${service_rundir}/socket"
-    connect "${socket}" "${service_dir}/${SERVICE_START}"
-    if [ "$?" != 0 ]; then
-        printf "%s: stop failed\n" "$0" 1>&2
-        exit 1;
-    fi
-fi
+service_state="${service_rundir}/state"
+state "${service_state}" "stopped"
+ret="$?"
+if [ "${ret}" == 2 ]; then
+    printf "%s: updating the state failed\n" "$0" 1>&2
+    exit 1
+elif [ "${ret}" == 0 ]; then
 
-if [ -e "${service_dir}/${SERVICE_POST}" ]; then
-    timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_POST}"
-    if [ "$?" != 0 ]; then
-        printf "%s: post failed\n" "$0" 1>&2
-        exit 1;
+    if [ -x "${service_dir}/${SERVICE_RUN}" ]; then
+        socket="${service_rundir}/socket"
+        connect "${socket}"
+        if [ "$?" != 0 ]; then
+            printf "%s: stop failed\n" "$0" 1>&2
+            state "${service_state}" "failed"
+            exit 1
+        fi
     fi
-fi
 
+    if [ -e "${service_dir}/${SERVICE_POST}" ]; then
+        timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_POST}"
+        if [ "$?" != 0 ]; then
+            printf "%s: post failed\n" "$0" 1>&2
+            state "${service_state}" "failed"
+            exit 1
+        fi
+    fi
+
+fi
