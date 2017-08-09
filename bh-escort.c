@@ -33,7 +33,7 @@ volatile sig_atomic_t sigint;
 
 void handle_signal(int signum) {
     /* Handle any incoming signals */
-    if (signum == SIGCHLD) sigchld += 1;
+    if (signum == SIGCHLD) sigchld = 1;
     if (signum == SIGALRM) sigalrm = 1;
     if (signum == SIGTERM) sigterm = 1;
     if (signum == SIGINT) sigint = 1;
@@ -234,11 +234,11 @@ int main(int count, char** args) {
             sleep(SLEEP_INTERVAL);
         }
 
-        while (sigchld > 0) {
-            sigchld --;
-
+        pid_t child = 1;
+        while (child > 0) {
             int status;
-            pid_t child = waitpid(-1, &status, WNOHANG);
+            child = waitpid(-1, &status, WNOHANG);
+
             if (child == pid) {
                 /* Handle our special child */
                 if (WIFEXITED(status)) {
@@ -292,8 +292,15 @@ int main(int count, char** args) {
             }
         }
 
-        if (sigalrm || ((sigterm || sigint) && !keep_alive)) {
-            /* Kill the child */
+        if (sigalrm || (sigint && !keep_alive)) {
+            /* Kill the child.
+             *
+             * We can't reliably check for two SIGTERMs since only a single
+             * copy of a signal is ever queued. This isn't a big deal for
+             * SIGINT since the user can just hit CTRL-C again, but for sending
+             * SIGTERM in (eg) a script that could be surprising, so only check
+             * for copies of SIGINT.
+             */
             fprintf(stderr, "%s: killing child\n", name);
             sigalrm = 0;
             kill(pid, SIGKILL);
