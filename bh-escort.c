@@ -29,14 +29,12 @@
 volatile sig_atomic_t sigchld;
 volatile sig_atomic_t sigalrm;
 volatile sig_atomic_t sigterm;
-volatile sig_atomic_t sigint;
 
 void handle_signal(int signum) {
     /* Handle any incoming signals */
     if (signum == SIGCHLD) sigchld = 1;
     if (signum == SIGALRM) sigalrm = 1;
     if (signum == SIGTERM) sigterm = 1;
-    if (signum == SIGINT) sigint = 1;
 }
 
 sigset_t init_signals(char* name) {
@@ -65,7 +63,6 @@ sigset_t init_signals(char* name) {
     if (ret != -1) ret = sigaction(SIGCHLD, &action, NULL);
     if (ret != -1) ret = sigaction(SIGALRM, &action, NULL);
     if (ret != -1) ret = sigaction(SIGTERM, &action, NULL);
-    if (ret != -1) ret = sigaction(SIGINT, &action, NULL);
     if (ret == -1) {
         fprintf(stderr, "%s: sigaction(): %s\n", name, strerror(errno));
         exit(EXIT_FAILURE);
@@ -75,7 +72,6 @@ sigset_t init_signals(char* name) {
     if (ret != -1) ret = sigdelset(&mask, SIGCHLD);
     if (ret != -1) ret = sigdelset(&mask, SIGALRM);
     if (ret != -1) ret = sigdelset(&mask, SIGTERM);
-    if (ret != -1) ret = sigdelset(&mask, SIGINT);
     if (ret == -1) {
         fprintf(stderr, "%s: setting the signal mask failed: %s\n", name,
                 strerror(errno));
@@ -292,24 +288,17 @@ int main(int count, char** args) {
             }
         }
 
-        if (sigalrm || (sigint && !keep_alive)) {
-            /* Kill the child.
-             *
-             * We can't reliably check for two SIGTERMs since only a single
-             * copy of a signal is ever queued. This isn't a big deal for
-             * SIGINT since the user can just hit CTRL-C again, but for sending
-             * SIGTERM in (eg) a script that could be surprising, so only check
-             * for copies of SIGINT.
-             */
+        if (sigalrm) {
+            /* Kill the child */
             fprintf(stderr, "%s: killing child\n", name);
             sigalrm = 0;
             kill(pid, SIGKILL);
         }
 
-        if (sigterm || sigint || quit_request) {
+        if (sigterm || quit_request) {
             /* Stop the child, and close the socket for incoming requests */
             fprintf(stderr, "%s: terminating child\n", name);
-            quit_request = sigint = sigterm = 0;
+            quit_request = sigterm = 0;
 
             keep_alive = false;
             kill(pid, SIGTERM);
