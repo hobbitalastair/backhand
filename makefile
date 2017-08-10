@@ -6,15 +6,12 @@ PROGS = bh-release bh-require bh-start bh-status bh-stop bh-stopall \
 
 all: ${PROGS}
 
-%: %.sh
+%: src/%.sh
 	cp $^ $@
 	chmod +x $@
 
-%: %.c
-	${CC} $^ -o $@ ${CFLAGS} ${LDFLAGS}
-
-%.o: %.c config.h
-	${CC} -c $< -o $@ ${CFLAGS} ${LDFLAGS}
+%: src/%.c src/config.h
+	${CC} $< -o $@ ${CFLAGS} ${LDFLAGS}
 
 clean:
 	rm -f ${PROGS}
