@@ -1,4 +1,3 @@
-bh-escort
 bh-release
 bh-require
 bh-start
@@ -6,6 +5,7 @@ bh-status
 bh-stop
 bh-stopall
 connect
+escort
 semaphore
 state
 *.o

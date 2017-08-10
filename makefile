@@ -1,8 +1,8 @@
 PREFIX := ${DESTDIR}/usr
 BINDIR := ${PREFIX}/bin
 CFLAGS := -Os -Wall -Werror
-PROGS = bh-escort bh-release bh-require bh-start bh-status bh-stop bh-stopall \
-	connect semaphore state
+PROGS = bh-release bh-require bh-start bh-status bh-stop bh-stopall \
+	connect escort semaphore state
 
 all: ${PROGS}
 
