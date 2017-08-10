@@ -7,6 +7,12 @@ A set of utilities for managing background processes.
 - `semaphore`: increment or decrement a stored counter
 - `state`: provide atomic access to the contents of a file
 
+## Building
+
+Running `make`, `make install` should be sufficient.
+If you feel the need to modify things the `makefile` should be quite readable
+and `src/config.h` contains most of the modifiable declarations.
+
 ## Use cases
 
 This is aimed at simple systems with limited layers of functionality.
