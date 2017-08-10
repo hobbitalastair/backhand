@@ -1,5 +1,6 @@
 PREFIX := ${DESTDIR}/usr
 BINDIR := ${PREFIX}/bin
+MANDIR := ${PREFIX}/share/man/
 CFLAGS := -Os -Wall -Werror
 PROGS = bh-release bh-require bh-start bh-status bh-stop bh-stopall \
 	connect escort semaphore state
@@ -18,5 +19,12 @@ clean:
 
 install: ${PROGS}
 	mkdir -p "${BINDIR}/"
-	for obj in ${PROGS}; do install -m755 "$$obj" ${BINDIR}/; done
-
+	for obj in ${PROGS}; do \
+	    install -m755 "$$obj" "${BINDIR}/"; \
+	done
+	for section in 1 7; do \
+	    mkdir -p "${MANDIR}/man$${section}/"; \
+	    for man in docs/*.$${section}; do \
+		install -m644 "$$man" "${MANDIR}/man$${section}/"; \
+	    done \
+	done
