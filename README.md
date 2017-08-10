@@ -2,29 +2,35 @@
 
 A set of utilities for managing background processes.
 
-- `daemonize`: start the given process as a daemon using the double-fork method
-- `renew`: restart a process whenever it returns (rate limited)
+- `escort`: provide a control socket for a child program
+- `connect`: connect to a socket and wait for a response
 - `semaphore`: increment or decrement a stored counter
-- `pipekill`: send a SIGTERM to a child process when a pipe is written to
+- `state`: provide atomic access to the contents of a file
 
 ## Use cases
 
 This is aimed at simple systems with limited layers of functionality.
 
-- Manage persistent background processes, for instance `sshd`
-- Allow triggering persistent programs on device insertion, for instance
-  `wpa_supplicant` and `udhcpc`
+- Manage persistent background processes, for instance `sshd` and `getty`
+- Allow starting/stopping daemons on device insertion, for instance
+  `wpa_supplicant` and `udhcpc` for a wifi dongle
 - Manage background scripts or batch jobs
 
 This is not suitable for managing the startup process of complex systems, due
 to the simplified design (no dependency management!) - use an alternative such
 as `systemd` for that.
 
+Key concerns are (in order of importance):
+
+- Complexity
+- Reliability and correctness
+- Memory usage (process count, structures)
+- Speed (mostly bootup/shutdown speed)
+
 ## Programs
 
 The main programs used for interacting with the daemon state are listed below.
-These programs explicitely stop and start running services, ignoring
-dependencies.
+These programs explicitely stop and start running services.
 
 * `bh-start` - start a service
 * `bh-stop` - stop a service
@@ -36,9 +42,10 @@ programs listed below.
 By "requiring" another service in the pre script and "releasing" the service in
 the post script, services can be started and stopped as required, without
 requiring an explicit dependency tree.
+These return once the operation has completed.
 
-* `bh-require` - require a service to be started (returns once the service starts)
-* `bh-release` - release a prior require (returns once the service exits)
+* `bh-require` - require a service to be started
+* `bh-release` - release a prior requirement
 
 ## Service scripts
 
