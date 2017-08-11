@@ -34,7 +34,7 @@ semaphore "${service_rundir}/require" -
 err="$?"
 if [ "${err}" == 0 ]; then
     bh-stop "${service}"
-else if [ "${err}" == 2 ]; then
+elif [ "${err}" == 2 ]; then
     printf '%s: failed to decrement require count\n' "$0" 1>&2
     exit 1
 fi

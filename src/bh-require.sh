@@ -37,7 +37,7 @@ semaphore "${service_rundir}/require" +
 err="$?"
 if [ "${err}" == 0 ]; then
     bh-start "${service}"
-else if [ "${err}" == 2 ]; then
+elif [ "${err}" == 2 ]; then
     printf '%s: failed to increment require count\n' "$0" 1>&2
     exit 1
 fi
