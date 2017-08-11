@@ -2,17 +2,6 @@
 
 A set of utilities for managing background processes.
 
-- `escort`: provide a control socket for a child program
-- `connect`: connect to a socket and wait for a response
-- `semaphore`: increment or decrement a stored counter
-- `state`: provide atomic access to the contents of a file
-
-## Building
-
-Running `make`, `make install` should be sufficient.
-If you feel the need to modify things the `makefile` should be quite readable
-and `src/config.h` contains most of the modifiable declarations.
-
 ## Use cases
 
 This is aimed at simple systems with limited layers of functionality.
@@ -23,8 +12,7 @@ This is aimed at simple systems with limited layers of functionality.
 - Manage background scripts or batch jobs
 
 This is not suitable for managing the startup process of complex systems, due
-to the simplified design (no dependency management!) - use an alternative such
-as `systemd` for that.
+to the simplified design - use an alternative such as `systemd` for that.
 
 Key concerns are (in order of importance):
 
@@ -53,6 +41,13 @@ These return once the operation has completed.
 * `bh-require` - require a service to be started
 * `bh-release` - release a prior requirement
 
+To manage the daemons several helper utilities are used.
+
+- `escort`: provide a control socket for a child program
+- `connect`: connect to a socket and wait for a response
+- `semaphore`: increment or decrement a stored counter
+- `state`: provide atomic access to the contents of a file
+
 ## Service scripts
 
 Service scripts are stored in a per-service directory.
@@ -62,4 +57,10 @@ completed.
 * `pre` - run before a service starts
 * `run` - the actual service to run (forking services not supported)
 * `post` - run after the service stops
+
+## Building
+
+Running `make`, `make install` should be sufficient.
+If you feel the need to modify things the `makefile` should be quite readable
+and `src/config.h` contains most of the modifiable declarations.
 
