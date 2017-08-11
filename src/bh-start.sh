@@ -54,7 +54,7 @@ elif [ "${ret}" == 0 ]; then
 
     if [ -x "${service_dir}/${SERVICE_RUN}" ]; then
         socket="${service_rundir}/socket"
-        bh-escort "${socket}" "${service_dir}/${SERVICE_RUN}" \
+        escort "${socket}" "${service_dir}/${SERVICE_RUN}" \
             "${service_target}"
         if [ "$?" != 0 ]; then
             printf "%s: run failed\n" "$0" 1>&2
