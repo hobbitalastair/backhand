@@ -16,8 +16,10 @@ if [ $# != 1 ]; then
     exit 1
 fi
 service="$1"
+service_name="${service%%@*}"
+service_target="${service#*@}"
 
-service_dir="${SERVICE_DIR}/${service}"
+service_dir="${SERVICE_DIR}/${service_name}"
 if [ ! -d "${service_dir}" ]; then
     printf "%s: no such service\n" "$0" 1>&2
     exit 1
@@ -48,7 +50,7 @@ elif [ "${ret}" == 0 ]; then
     fi
 
     if [ -e "${service_dir}/${SERVICE_POST}" ]; then
-        timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_POST}"
+        timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_POST}" "${service_target}"
         if [ "$?" != 0 ]; then
             printf "%s: post failed\n" "$0" 1>&2
             state "${service_state}" "failed"

@@ -15,8 +15,10 @@ if [ $# != 1 ]; then
     exit 1;
 fi
 service="$1"
+service_name="${service%%@*}"
+service_target="${service#*@}"
 
-service_dir="${SERVICE_DIR}/${service}"
+service_dir="${SERVICE_DIR}/${service_name}"
 if [ ! -d "${service_dir}" ]; then
     printf "%s: no such service\n" "$0" 1>&2
     exit 1;

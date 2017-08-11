@@ -16,8 +16,10 @@ if [ $# != 1 ]; then
     exit 1
 fi
 service="$1"
+service_name="${service%%@*}"
+service_target="${service#*@}"
 
-service_dir="${SERVICE_DIR}/${service}"
+service_dir="${SERVICE_DIR}/${service_name}"
 if [ ! -d "${service_dir}" ]; then
     printf "%s: no such service\n" "$0" 1>&2
     exit 1
@@ -41,7 +43,8 @@ if [ "${ret}" == 2 ]; then
 elif [ "${ret}" == 0 ]; then
 
     if [ -x "${service_dir}/${SERVICE_PRE}" ]; then
-        timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_PRE}"
+        timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_PRE}" \
+            "${service_target}"
         if [ "$?" != 0 ]; then
             printf "%s: pre failed\n" "$0" 1>&2
             state "${service_state}" "failed"
@@ -51,7 +54,8 @@ elif [ "${ret}" == 0 ]; then
 
     if [ -x "${service_dir}/${SERVICE_RUN}" ]; then
         socket="${service_rundir}/socket"
-        bh-escort "${socket}" "${service_dir}/${SERVICE_RUN}"
+        bh-escort "${socket}" "${service_dir}/${SERVICE_RUN}" \
+            "${service_target}"
         if [ "$?" != 0 ]; then
             printf "%s: run failed\n" "$0" 1>&2
             state "${service_state}" "failed"
