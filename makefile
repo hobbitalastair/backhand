@@ -2,13 +2,20 @@ PREFIX := ${DESTDIR}/usr
 BINDIR := ${PREFIX}/bin
 MANDIR := ${PREFIX}/share/man/
 CFLAGS := -Os -Wall -Werror
+
+# The timeout command supplied in busybox has a different syntax from that
+# provided in the GNU coreutils, so provide a way to override the command
+# used. The next argument will be the timeout in seconds.
+TIMEOUTCMD := timeout # GNU coreutils TIMEOUTCMD
+#TIMEOUTCMD := timeout -t # Busybox TIMEOUTCMD
+
 PROGS = bh-release bh-require bh-start bh-status bh-stop bh-stopall \
 	connect escort semaphore state
 
 all: ${PROGS}
 
 %: src/%.sh
-	cp $^ $@
+	sed $^ -e 's:@TIMEOUTCMD@:${TIMEOUTCMD}:g' > $@
 	chmod +x $@
 
 %: src/%.c src/config.h

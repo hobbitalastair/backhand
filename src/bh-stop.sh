@@ -53,7 +53,7 @@ elif [ "${ret}" == 0 ]; then
     fi
 
     if [ -e "${service_dir}/${SERVICE_POST}" ]; then
-        timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_POST}" \
+        @TIMEOUTCMD@ "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_POST}" \
             "${service_target}" >> "${service_log}" 2>&1
         if [ "$?" != 0 ]; then
             printf "%s: post failed\n" "$0" 1>&2

@@ -46,7 +46,7 @@ if [ "${ret}" == 2 ]; then
 elif [ "${ret}" == 0 ]; then
 
     if [ -x "${service_dir}/${SERVICE_PRE}" ]; then
-        timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_PRE}" \
+        @TIMEOUTCMD@ "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_PRE}" \
             "${service_target}" >> "${service_log}" 2>&1
         if [ "$?" != 0 ]; then
             printf "%s: pre failed\n" "$0" 1>&2
