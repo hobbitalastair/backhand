@@ -7,6 +7,7 @@
 
 [ -z "${SERVICE_DIR}" ] && SERVICE_DIR="/usr/lib/backhand"
 [ -z "${SERVICE_RUNDIR}" ] && SERVICE_RUNDIR="/run/backhand"
+[ -z "${SERVICE_LOGDIR}" ] && SERVICE_LOGDIR="/var/log/backhand"
 SERVICE_POST="post"
 SERVICE_RUN="run"
 SERVICE_TIMEOUT=10
@@ -18,6 +19,8 @@ fi
 service="$1"
 service_name="${service%%@*}"
 service_target="${service#*@}"
+
+service_log="${SERVICE_LOGDIR}/${service}"
 
 service_dir="${SERVICE_DIR}/${service_name}"
 if [ ! -d "${service_dir}" ]; then
@@ -50,7 +53,8 @@ elif [ "${ret}" == 0 ]; then
     fi
 
     if [ -e "${service_dir}/${SERVICE_POST}" ]; then
-        timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_POST}" "${service_target}"
+        timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_POST}" \
+            "${service_target}" >> "${service_log}" 2>&1
         if [ "$?" != 0 ]; then
             printf "%s: post failed\n" "$0" 1>&2
             state "${service_state}" "failed"

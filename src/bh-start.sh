@@ -7,6 +7,7 @@
 
 [ -z "${SERVICE_DIR}" ] && SERVICE_DIR="/usr/lib/backhand"
 [ -z "${SERVICE_RUNDIR}" ] && SERVICE_RUNDIR="/run/backhand"
+[ -z "${SERVICE_LOGDIR}" ] && SERVICE_LOGDIR="/var/log/backhand"
 SERVICE_PRE="pre"
 SERVICE_RUN="run"
 SERVICE_TIMEOUT=10
@@ -18,6 +19,8 @@ fi
 service="$1"
 service_name="${service%%@*}"
 service_target="${service#*@}"
+
+service_log="${SERVICE_LOGDIR}/${service}"
 
 service_dir="${SERVICE_DIR}/${service_name}"
 if [ ! -d "${service_dir}" ]; then
@@ -44,7 +47,7 @@ elif [ "${ret}" == 0 ]; then
 
     if [ -x "${service_dir}/${SERVICE_PRE}" ]; then
         timeout "${SERVICE_TIMEOUT}" "${service_dir}/${SERVICE_PRE}" \
-            "${service_target}"
+            "${service_target}" >> "${service_log}" 2>&1
         if [ "$?" != 0 ]; then
             printf "%s: pre failed\n" "$0" 1>&2
             state "${service_state}" "failed"
@@ -55,7 +58,7 @@ elif [ "${ret}" == 0 ]; then
     if [ -x "${service_dir}/${SERVICE_RUN}" ]; then
         socket="${service_rundir}/socket"
         escort "${socket}" "${service_dir}/${SERVICE_RUN}" \
-            "${service_target}"
+            "${service_target}" >> "${service_log}" 2>&1
         if [ "$?" != 0 ]; then
             printf "%s: run failed\n" "$0" 1>&2
             state "${service_state}" "failed"
