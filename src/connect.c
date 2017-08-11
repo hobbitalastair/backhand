@@ -26,7 +26,7 @@ int main(int count, char** args) {
     }
     char* path = args[1];
     if (strlen(path) >= SOCK_PATHLEN) {
-        fprintf(stderr, "%s: \"%s\" too long (max %ld bytes)\n", name, path,
+        fprintf(stderr, "%s: \"%s\" too long (max %zu bytes)\n", name, path,
                 strlen(path));
         return EINVAL;
     }

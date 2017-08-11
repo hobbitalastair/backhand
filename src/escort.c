@@ -84,7 +84,7 @@ sigset_t init_signals(char* name) {
 int init_socket(char* name, char* path) {
     /* Initialise a local socket bound to "path", calling exit() on failure */
     if (strlen(path) >= SOCK_PATHLEN) {
-        fprintf(stderr, "%s: \"%s\" too long (max %ld bytes)\n", name, path,
+        fprintf(stderr, "%s: \"%s\" too long (max %zu bytes)\n", name, path,
                 strlen(path));
         exit(EINVAL);
     }
