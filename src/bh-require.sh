@@ -5,14 +5,12 @@
 # Author:   Alastair Hughes
 # Contact:  hobbitalastair at yandex dot com
 
-set -e
-
 SERVICE_DIR="/usr/lib/backhand"
 SERVICE_RUNDIR="/run/backhand"
 
 if [ $# != 1 ]; then
     printf "usage: bh-require <service>\n" 1>&2
-    exit 1;
+    exit 1
 fi
 service="$1"
 service_name="${service%%@*}"
@@ -21,7 +19,7 @@ service_target="${service#*@}"
 service_dir="${SERVICE_DIR}/${service_name}"
 if [ ! -d "${service_dir}" ]; then
     printf "%s: no such service\n" "$0" 1>&2
-    exit 1;
+    exit 1
 fi
 
 service_rundir="${SERVICE_RUNDIR}/${service}"
@@ -37,6 +35,10 @@ semaphore "${service_rundir}/require" +
 err="$?"
 if [ "${err}" == 0 ]; then
     bh-start "${service}"
+    if [ "$?" -ne 0 ]; then
+        printf '%s: failed to start service %s\n' "$0" "${service}" 1>&2
+        exit 1
+    fi
 elif [ "${err}" == 2 ]; then
     printf '%s: failed to increment require count\n' "$0" 1>&2
     exit 1

@@ -5,8 +5,6 @@
 # Author:   Alastair Hughes
 # Contact:  hobbitalastair at yandex dot com
 
-set -e
-
 [ -z "${SERVICE_DIR}" ] && SERVICE_DIR="/usr/lib/backhand"
 [ -z "${SERVICE_RUNDIR}" ] && SERVICE_RUNDIR="/run/backhand"
 
@@ -21,7 +19,7 @@ service_target="${service#*@}"
 service_dir="${SERVICE_DIR}/${service_name}"
 if [ ! -d "${service_dir}" ]; then
     printf "%s: no such service\n" "$0" 1>&2
-    exit 1;
+    exit 1
 fi
 
 service_rundir="${SERVICE_RUNDIR}/${service}"
@@ -32,7 +30,12 @@ fi
 
 if [ -e "${service_rundir}/state" ]; then
     cat "${service_rundir}/state"
+    err="$?"
     printf '\n'
+    if [ "${err}" -ne 0 ]; then
+        printf '%s: failed to read status\n' "$0" 1>&2
+        exit 1
+    fi
 else
     printf 'stopped\n'
 fi

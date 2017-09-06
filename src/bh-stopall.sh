@@ -5,8 +5,6 @@
 # Author:   Alastair Hughes
 # Contact:  hobbitalastair at yandex dot com
 
-set -e
-
 SERVICE_RUNDIR="/run/backhand/"
 
 # FIXME: Services should be stopped in parallel.
@@ -14,7 +12,8 @@ SERVICE_RUNDIR="/run/backhand/"
 cd "${SERVICE_RUNDIR}"
 for service in *; do
     if [ -d "${service}" ]; then
-        bh-stop "${service}"
+        bh-stop "${service}" || \
+            printf '%s: failed to stop %s\n' "$0" "${service}" 1>&2
     fi
 done
 
