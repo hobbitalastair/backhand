@@ -21,6 +21,10 @@ service_name="${service%%@*}"
 service_target="${service#*@}"
 
 service_log="${SERVICE_LOGDIR}/${service}"
+if [ ! -w "${SERVICE_LOGDIR}" ]; then
+    printf '%s: log %s not writeable; falling back to /dev/null\n' "$0" 1>&2
+    service_log="/dev/null"
+fi
 
 service_dir="${SERVICE_DIR}/${service_name}"
 if [ ! -d "${service_dir}" ]; then
